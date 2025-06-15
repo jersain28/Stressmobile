@@ -64,15 +64,25 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
     const int dayStress = 72;
     const int weekStress = 68;
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.bodyMedium?.color;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final cardColor = theme.cardColor;
+    final borderColor = isDark ? colorScheme.primary.withOpacity(0.4) : const Color(0xFFB0B8D1);
+    final accentColor = colorScheme.primary;
+    final secondaryTextColor = theme.textTheme.bodySmall?.color?.withOpacity(0.7) ?? (isDark ? Colors.white70 : Colors.black54);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
+        title: Text(
           'Monitor de Estrés',
           style: TextStyle(
-            color: Colors.black,
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -82,18 +92,18 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
             padding: const EdgeInsets.only(right: 16, top: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: const [
-                Icon(Icons.sync, color: Color(0xFFB0B8D1), size: 22),
-                SizedBox(height: 2),
+              children: [
+                Icon(Icons.sync, color: accentColor, size: 22),
+                const SizedBox(height: 2),
                 Text(
                   'Conectado',
-                  style: TextStyle(color: Colors.black54, fontSize: 12),
+                  style: TextStyle(color: secondaryTextColor, fontSize: 12),
                 ),
               ],
             ),
           ),
         ],
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
@@ -106,7 +116,7 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
                 height: 220,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Color(0xFFB0B8D1), width: 8),
+                  border: Border.all(color: borderColor, width: 8),
                 ),
                 child: Center(
                   child: Column(
@@ -114,16 +124,16 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
                     children: [
                       Text(
                         '$stressLevel',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Nivel de estrés actual',
-                        style: TextStyle(fontSize: 16, color: Colors.black87),
+                        style: TextStyle(fontSize: 16, color: secondaryTextColor),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -135,7 +145,7 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Color(0xFFB0B8D1),
+                color: accentColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -145,15 +155,15 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       child: Column(
                         children: [
-                          const Text(
+                          Text(
                             'Estrés del día',
-                            style: TextStyle(color: Colors.white, fontSize: 15),
+                            style: TextStyle(color: colorScheme.onPrimary, fontSize: 15),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             '$dayStress',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: colorScheme.onPrimary,
                               fontWeight: FontWeight.bold,
                               fontSize: 22,
                             ),
@@ -168,15 +178,15 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       child: Column(
                         children: [
-                          const Text(
+                          Text(
                             'Estrés de la semana',
-                            style: TextStyle(color: Colors.white, fontSize: 15),
+                            style: TextStyle(color: colorScheme.onPrimary, fontSize: 15),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             '$weekStress',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: colorScheme.onPrimary,
                               fontWeight: FontWeight.bold,
                               fontSize: 22,
                             ),
@@ -217,6 +227,7 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
             label: 'Cuenta',
           ),
         ],
+        backgroundColor: backgroundColor,
       ),
     );
   }

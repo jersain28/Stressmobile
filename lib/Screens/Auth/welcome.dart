@@ -7,17 +7,14 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Using MediaQuery to get screen size information.
-    // This is crucial for making the UI responsive to different screen dimensions.
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textColor = theme.textTheme.bodyMedium?.color;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+
     final Size screenSize = MediaQuery.of(context).size;
+    final bool isSmallScreen = screenSize.width < 400;
 
-    // A common approach to determine if the device is a "small screen" (like a smartwatch)
-    // is to check its width. Smartwatches typically have very small widths.
-    // You might need to adjust this threshold based on specific smartwatch dimensions.
-    final bool isSmallScreen =
-        screenSize.width < 400; // Example threshold, adjust as needed
-
-    // Determine sizes and spacing based on screen size
     final double imageSize = isSmallScreen ? 120 : 200;
     final double titleFontSize = isSmallScreen ? 20 : 24;
     final double buttonWidth = isSmallScreen ? 200 : 280;
@@ -28,10 +25,8 @@ class WelcomeScreen extends StatelessWidget {
     final double termsFontSize = isSmallScreen ? 10 : 12;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor,
       body: SafeArea(
-        // Using SingleChildScrollView to prevent overflow on very small screens
-        // if content exceeds the available height.
         child: SingleChildScrollView(
           child: Center(
             child: Padding(
@@ -40,51 +35,40 @@ class WelcomeScreen extends StatelessWidget {
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                // Ensures content is centered vertically when there's enough space
-                // and pushed to the top if it overflows.
-                mainAxisSize:
-                    MainAxisSize.min, // Use minimum space required by children
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(height: spacingMedium), // Add some top padding
-                  // Application Icon
+                  SizedBox(height: spacingMedium),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(100.0),
                     child: Image.asset(
-                      'assets/icon/icon.png', // Ensure this asset path is correct
+                      'assets/icon/icon.png',
                       width: imageSize,
                       height: imageSize,
                       fit: BoxFit.cover,
-                      // Add an error builder for robustness in case the image fails to load
                       errorBuilder: (context, error, stackTrace) {
                         return Icon(
                           Icons.error,
                           size: imageSize,
-                          color: Colors.red,
+                          color: colorScheme.error,
                         );
                       },
                     ),
                   ),
                   SizedBox(height: spacingMedium),
-
-                  // Title Text
                   Text(
                     'Salud Mental',
                     style: TextStyle(
                       fontSize: titleFontSize,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: textColor,
                     ),
                   ),
-
                   SizedBox(height: spacingLarge),
-
-                  // "Crear cuenta" Button
                   SizedBox(
                     width: buttonWidth,
                     height: buttonHeight,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Navigate to CreateAccountScreen
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -93,9 +77,8 @@ class WelcomeScreen extends StatelessWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                          0xFF9CA9DB,
-                        ), // Button color
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -103,16 +86,13 @@ class WelcomeScreen extends StatelessWidget {
                       child: Text(
                         'Crear cuenta',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colorScheme.onPrimary,
                           fontSize: isSmallScreen ? 14 : 16,
                         ),
                       ),
                     ),
                   ),
-
                   SizedBox(height: spacingSmall),
-
-                  // "Iniciar sesión" Button
                   SizedBox(
                     width: buttonWidth,
                     height: buttonHeight,
@@ -126,8 +106,8 @@ class WelcomeScreen extends StatelessWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF5F5F9),
-                        foregroundColor: Colors.black87,
+                        backgroundColor: colorScheme.surface,
+                        foregroundColor: textColor,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -139,27 +119,21 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   SizedBox(height: spacingLarge),
-
-                  // Terms and Conditions Text
-                  // Using FittedBox to ensure the text fits within the available width,
-                  // scaling down if necessary, especially for very small screens.
                   FittedBox(
-                    fit: BoxFit.scaleDown, // Scales down if needed
+                    fit: BoxFit.scaleDown,
                     child: Text(
                       'Términos y condiciones • Política de privacidad',
                       style: TextStyle(
                         fontSize: termsFontSize,
-                        color: Colors.grey[600],
+                        color: theme.textTheme.bodySmall?.color?.withOpacity(0.7) ?? Colors.grey,
                       ),
                       textAlign: TextAlign.center,
-                      maxLines: 1, // Keep on one line if possible
-                      overflow: TextOverflow
-                          .ellipsis, // Show ellipsis if it overflows
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  SizedBox(height: spacingMedium), // Add some bottom padding
+                  SizedBox(height: spacingMedium),
                 ],
               ),
             ),

@@ -65,8 +65,18 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
     }
   }
 
+  // ...existing code...
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.cardColor;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final iconColor = theme.iconTheme.color ?? (isDark ? Colors.white70 : Colors.black54);
+    final titleColor = theme.textTheme.bodyLarge?.color ?? (isDark ? Colors.white : Colors.black);
+    final descColor = theme.textTheme.bodyMedium?.color?.withOpacity(0.8) ?? (isDark ? Colors.white70 : Colors.black87);
+
     final tips = [
       {
         'icon': Icons.air,
@@ -105,15 +115,16 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
+        title: Text(
           'Consejos y Recursos',
           style: TextStyle(
-            color: Colors.black,
+            color: titleColor,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
         ),
       ),
+      backgroundColor: backgroundColor,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
         child: ListView.separated(
@@ -123,14 +134,15 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
             final tip = tips[index];
             return Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 2,
-                    offset: Offset(0, 1),
-                  ),
+                  if (!isDark)
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 2,
+                      offset: Offset(0, 1),
+                    ),
                 ],
               ),
               padding: const EdgeInsets.all(16),
@@ -139,7 +151,7 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
                 children: [
                   Icon(
                     tip['icon'] as IconData,
-                    color: Colors.black54,
+                    color: iconColor,
                     size: 32,
                   ),
                   const SizedBox(width: 16),
@@ -149,16 +161,17 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
                       children: [
                         Text(
                           tip['title'] as String,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
+                            color: titleColor,
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           tip['desc'] as String,
-                          style: const TextStyle(
-                            color: Colors.black87,
+                          style: TextStyle(
+                            color: descColor,
                             fontSize: 14,
                           ),
                         ),
@@ -175,7 +188,7 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-           items: const [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.monitor_heart),
             label: 'Monitor',
@@ -197,7 +210,7 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
             label: 'Cuenta',
           ),
         ],
-        backgroundColor: Color(0xFFF6F6F6),
+        backgroundColor: backgroundColor,
       ),
     );
   }

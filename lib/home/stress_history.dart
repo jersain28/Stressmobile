@@ -59,18 +59,28 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.bodyMedium?.color;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final cardColor = theme.cardColor;
+    final borderColor = isDark ? colorScheme.primary.withOpacity(0.4) : const Color(0xFFB0B8D1);
+    final accentColor = colorScheme.primary;
+    final secondaryTextColor = theme.textTheme.bodySmall?.color?.withOpacity(0.7) ?? (isDark ? Colors.white70 : Colors.black54);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
+        title: Text(
           'Historial de Estrés',
           style: TextStyle(
-            color: Colors.black,
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -78,7 +88,7 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
+            icon: Icon(Icons.more_vert, color: textColor),
             onPressed: () {},
           ),
         ],
@@ -92,9 +102,9 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                _buildTab('Día', 0),
-                _buildTab('Semana', 1),
-                _buildTab('Mes', 2),
+                _buildTab(context, 'Día', 0),
+                _buildTab(context, 'Semana', 1),
+                _buildTab(context, 'Mes', 2),
               ],
             ),
             const SizedBox(height: 12),
@@ -103,7 +113,14 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
               height: 180,
               child: LineChart(
                 LineChartData(
-                  gridData: FlGridData(show: true, drawVerticalLine: false),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: borderColor.withOpacity(0.2),
+                      strokeWidth: 1,
+                    ),
+                  ),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(showTitles: false),
@@ -119,21 +136,25 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
                         showTitles: true,
                         reservedSize: 28,
                         getTitlesWidget: (value, meta) {
+                          final labelStyle = TextStyle(
+                            fontSize: 12,
+                            color: secondaryTextColor,
+                          );
                           switch (value.toInt()) {
                             case 8:
-                              return const Text('8:00', style: TextStyle(fontSize: 12));
+                              return Text('8:00', style: labelStyle);
                             case 10:
-                              return const Text('10:00', style: TextStyle(fontSize: 12));
+                              return Text('10:00', style: labelStyle);
                             case 12:
-                              return const Text('12:00', style: TextStyle(fontSize: 12));
+                              return Text('12:00', style: labelStyle);
                             case 14:
-                              return const Text('14:00', style: TextStyle(fontSize: 12));
+                              return Text('14:00', style: labelStyle);
                             case 16:
-                              return const Text('16:00', style: TextStyle(fontSize: 12));
+                              return Text('16:00', style: labelStyle);
                             case 18:
-                              return const Text('18:00', style: TextStyle(fontSize: 12));
+                              return Text('18:00', style: labelStyle);
                             case 20:
-                              return const Text('20:00', style: TextStyle(fontSize: 12));
+                              return Text('20:00', style: labelStyle);
                           }
                           return const SizedBox.shrink();
                         },
@@ -142,7 +163,7 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
                   ),
                   borderData: FlBorderData(
                     show: true,
-                    border: Border.all(color: Colors.black12),
+                    border: Border.all(color: borderColor.withOpacity(0.5)),
                   ),
                   minX: 8,
                   maxX: 20,
@@ -160,7 +181,7 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
                         FlSpot(20, 50),
                       ],
                       isCurved: true,
-                      color: Color(0xFFB0B8D1),
+                      color: accentColor,
                       barWidth: 3,
                       dotData: FlDotData(
                         show: true,
@@ -171,7 +192,7 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
                               radius: 6,
                               color: Colors.red,
                               strokeWidth: 2,
-                              strokeColor: Colors.white,
+                              strokeColor: cardColor,
                             );
                           }
                           if (spot.x == 16) {
@@ -180,14 +201,14 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
                               radius: 6,
                               color: Colors.green,
                               strokeWidth: 2,
-                              strokeColor: Colors.white,
+                              strokeColor: cardColor,
                             );
                           }
                           return FlDotCirclePainter(
                             radius: 4,
-                            color: Color(0xFFB0B8D1),
+                            color: accentColor,
                             strokeWidth: 1,
-                            strokeColor: Colors.white,
+                            strokeColor: cardColor,
                           );
                         },
                       ),
@@ -201,20 +222,19 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatCard(Icons.bar_chart, '56', 'Promedio', Colors.blue),
-                _buildStatCard(Icons.trending_up, '85', 'Máximo', Colors.red),
-                _buildStatCard(
-                  Icons.trending_down,
-                  '35',
-                  'Mínimo',
-                  Colors.green,
-                ),
+                _buildStatCard(context, Icons.bar_chart, '56', 'Promedio', accentColor),
+                _buildStatCard(context, Icons.trending_up, '85', 'Máximo', Colors.red),
+                _buildStatCard(context, Icons.trending_down, '35', 'Mínimo', Colors.green),
               ],
             ),
             const SizedBox(height: 18),
-            const Text(
+            Text(
               'Desglose por horas',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: textColor,
+              ),
             ),
             const SizedBox(height: 8),
             Expanded(
@@ -272,12 +292,21 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
             label: 'Cuenta',
           ),
         ],
+        backgroundColor: backgroundColor,
       ),
     );
   }
 
-  Widget _buildTab(String label, int index) {
-    final bool selected = _tabIndex == index;
+  Widget _buildTab(BuildContext context, String label, int index) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final selected = _tabIndex == index;
+    final selectedColor = isDark ? colorScheme.primary.withOpacity(0.15) : colorScheme.primary.withOpacity(0.08);
+    final selectedBorderColor = colorScheme.primary;
+    final textColor = theme.textTheme.bodyMedium?.color;
+    final secondaryTextColor = theme.textTheme.bodySmall?.color?.withOpacity(0.7) ?? (isDark ? Colors.white70 : Colors.black54);
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -288,16 +317,16 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFEFF1F7) : Colors.transparent,
+          color: selected ? selectedColor : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: selected ? const Color(0xFFB0B8D1) : Colors.transparent,
+            color: selected ? selectedBorderColor : Colors.transparent,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.black : Colors.black54,
+            color: selected ? colorScheme.primary : secondaryTextColor,
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -306,17 +335,23 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
   }
 
   Widget _buildStatCard(
+    BuildContext context,
     IconData icon,
     String value,
     String label,
     Color color,
   ) {
+    final theme = Theme.of(context);
+    final cardColor = theme.cardColor;
+    final textColor = theme.textTheme.bodyMedium?.color;
+    final secondaryTextColor = theme.textTheme.bodySmall?.color?.withOpacity(0.7);
+
     return Expanded(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFEFF1F7),
+          color: cardColor,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -325,11 +360,11 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
             const SizedBox(height: 4),
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textColor),
             ),
             Text(
               label,
-              style: const TextStyle(fontSize: 13, color: Colors.black54),
+              style: TextStyle(fontSize: 13, color: secondaryTextColor),
             ),
           ],
         ),
@@ -351,6 +386,10 @@ class _HourDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyMedium?.color;
+    final secondaryTextColor = theme.textTheme.bodySmall?.color?.withOpacity(0.7);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -359,18 +398,18 @@ class _HourDetail extends StatelessWidget {
             width: 60,
             child: Text(
               hour,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor),
             ),
           ),
           Expanded(
             child: Text(
               description,
-              style: const TextStyle(color: Colors.black54, fontSize: 14),
+              style: TextStyle(color: secondaryTextColor, fontSize: 14),
             ),
           ),
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor),
           ),
         ],
       ),

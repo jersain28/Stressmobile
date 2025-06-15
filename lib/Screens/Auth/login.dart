@@ -1,4 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:stress/Screens/Auth/create_account.dart';
 import 'package:stress/onboarding/smartwatch_connection.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,10 +16,78 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _rememberMe = false;
-  final bool _showError = false;
+  bool _showError = false;
+  bool _obscurePassword = true;
+
+  Future<void> _loginUser() async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SmartwatchConnectionScreen(),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _showError = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Error al iniciar sesión')),
+      );
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Guardar en Firestore si es nuevo usuario
+      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+          'email': userCredential.user!.email,
+          'createdAt': FieldValue.serverTimestamp(),
+          'provider': 'google',
+        });
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SmartwatchConnectionScreen(),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _showError = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error con Google: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textColor = theme.textTheme.bodyMedium?.color;
+    final hintColor = theme.hintColor;
+    final inputFillColor = theme.inputDecorationTheme.fillColor ?? (theme.brightness == Brightness.dark ? colorScheme.surface : const Color(0xFFE9E9E9));
+    final errorColor = theme.colorScheme.error;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -24,56 +96,113 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   '¡Bienvenido de nuevo!',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Ingresa tus credenciales para continuar',
-                  style: TextStyle(fontSize: 15, color: Colors.black87),
+                  style: TextStyle(fontSize: 15, color: hintColor),
                 ),
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'Correo electrónico',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
-                    color: Colors.black87,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 8),
-                TextField(
+                TextFormField(
                   controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(color: theme.textTheme.bodyMedium?.color),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: const Color(0xFFE9E9E9),
+                    fillColor: theme.cardColor,
+                    hintText: 'ejemplo@correo.com',
+                    hintStyle: TextStyle(color: theme.hintColor),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: theme.dividerColor, // Color del borde en estado normal
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.primary, // Color del borde enfocado
+                        width: 2,
+                      ),
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: theme.dividerColor,
+                        width: 1.5,
+                      ),
                     ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Contraseña',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
-                    color: Colors.black87,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 8),
-                TextField(
+                TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
+                  style: TextStyle(color: theme.textTheme.bodyMedium?.color),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: const Color(0xFFE9E9E9),
+                    fillColor: theme.cardColor,
+                    hintText: 'Mínimo 8 caracteres',
+                    hintStyle: TextStyle(color: theme.hintColor),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: theme.dividerColor, // Borde visible en modo claro y oscuro
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.primary, // Borde enfocado
+                        width: 2,
+                      ),
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: theme.dividerColor,
+                        width: 1.5,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: theme.dividerColor,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Campo requerido';
+                    if (value.length < 8) return 'Mínimo 8 caracteres';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -88,20 +217,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               _rememberMe = value ?? false;
                             });
                           },
+                          activeColor: colorScheme.primary,
                         ),
-                        const Text('Recordarme'),
+                        Text('Recordarme', style: TextStyle(color: textColor)),
                       ],
                     ),
                     GestureDetector(
                       onTap: () {
-                        // Navega a la pantalla de "Olvidé mi contraseña"
                         Navigator.pushNamed(context, '/forgot_password');
                       },
-                      child: const Text(
+                      child: Text(
                         '¿Olvidé mi contraseña?',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: colorScheme.primary,
                         ),
                       ),
                     ),
@@ -111,12 +240,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
                     child: Row(
-                      children: const [
-                        Icon(Icons.error, color: Colors.red, size: 20),
-                        SizedBox(width: 6),
+                      children: [
+                        Icon(Icons.error, color: errorColor, size: 20),
+                        const SizedBox(width: 6),
                         Text(
                           'Correo electrónico o contraseña incorrectos',
-                          style: TextStyle(color: Colors.red),
+                          style: TextStyle(color: errorColor),
                         ),
                       ],
                     ),
@@ -126,25 +255,41 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB0B8D1),
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SmartwatchConnectionScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: _loginUser,
                     child: const Text(
                       'Iniciar sesión',
                       style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: Image.asset(
+                      'assets/icon/google_logo.png',
+                      height: 24,
+                    ),
+                    label: Text(
+                      'Iniciar sesión con Google',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 16,
+                      ),
+                    ),
+                    onPressed: _signInWithGoogle,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: colorScheme.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
@@ -153,16 +298,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('¿No tienes una cuenta? '),
+                      Text('¿No tienes una cuenta? ', style: TextStyle(color: textColor)),
                       GestureDetector(
                         onTap: () {
-                          // Navega a la pantalla de registro
-                          Navigator.pushNamed(context, '/register');
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (context) => const CreateAccountScreen(),
+                          ));
                         },
-                        child: const Text(
+                        child: Text(
                           'Crear cuenta',
                           style: TextStyle(
-                            color: Colors.deepOrange,
+                            color: colorScheme.secondary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

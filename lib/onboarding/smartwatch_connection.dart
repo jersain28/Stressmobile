@@ -43,7 +43,20 @@ class _SmartwatchConnectionScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.cardColor;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final textColor = theme.textTheme.bodyMedium?.color;
+    final infoColor = isDark ? colorScheme.primary.withOpacity(0.2) : colorScheme.primary.withOpacity(0.15);
+    final infoTextColor = colorScheme.primary;
+    final deviceButtonColor = colorScheme.primary;
+    final deviceTextColor = colorScheme.onPrimary;
+    final skipTextColor = theme.textTheme.bodySmall?.color?.withOpacity(0.7) ?? Colors.black45;
+
     return Scaffold(
+      backgroundColor: backgroundColor,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
         child: SingleChildScrollView(
@@ -51,21 +64,25 @@ class _SmartwatchConnectionScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Conectar tu Smartwatch',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
               ),
               const SizedBox(height: 20),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Color(0xFFB0B8D1),
+                  color: infoColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
+                child: Text(
                   'Asegúrate de que el Bluetooth de tu teléfono esté activado y que tu smartwatch esté en modo de emparejamiento. Toca el botón de abajo para buscar dispositivos cercanos.',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                  style: TextStyle(color: infoTextColor, fontSize: 15),
                 ),
               ),
               const SizedBox(height: 20),
@@ -73,8 +90,8 @@ class _SmartwatchConnectionScreenState
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFB0B8D1),
-                    foregroundColor: Colors.white,
+                    backgroundColor: deviceButtonColor,
+                    foregroundColor: deviceTextColor,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -89,22 +106,22 @@ class _SmartwatchConnectionScreenState
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Dispositivos disponibles',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color: Colors.black87,
+                  color: textColor,
                 ),
               ),
               const SizedBox(height: 12),
               if (_searching)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Center(
                     child: Text(
                       'Buscando dispositivos cercanos...',
-                      style: TextStyle(color: Colors.black54),
+                      style: TextStyle(color: skipTextColor),
                     ),
                   ),
                 ),
@@ -116,8 +133,8 @@ class _SmartwatchConnectionScreenState
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFB0B8D1),
-                          foregroundColor: Colors.white,
+                          backgroundColor: deviceButtonColor,
+                          foregroundColor: deviceTextColor,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -129,23 +146,23 @@ class _SmartwatchConnectionScreenState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
-                              children: const [
-                                Icon(Icons.watch, color: Colors.white),
-                                SizedBox(width: 12),
+                              children: [
+                                Icon(Icons.watch, color: deviceTextColor),
+                                const SizedBox(width: 12),
                               ],
                             ),
                             Expanded(
                               child: Text(
                                 device,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.white,
+                                  color: deviceTextColor,
                                 ),
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.arrow_forward,
-                              color: Colors.white,
+                              color: deviceTextColor,
                             ),
                           ],
                         ),
@@ -159,17 +176,17 @@ class _SmartwatchConnectionScreenState
                   margin: const EdgeInsets.only(top: 16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFB0B8D1),
+                    color: infoColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
-                    children: const [
-                      Icon(Icons.check_circle, color: Colors.white),
-                      SizedBox(width: 12),
+                    children: [
+                      Icon(Icons.check_circle, color: infoTextColor),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'Tu smartwatch se ha conectado correctamente',
-                          style: TextStyle(color: Colors.white, fontSize: 15),
+                          style: TextStyle(color: infoTextColor, fontSize: 15),
                         ),
                       ),
                     ],
@@ -187,10 +204,10 @@ class _SmartwatchConnectionScreenState
                       ),
                     );
                   },
-                  child: const Text(
+                  child: Text(
                     '¿Omitir por ahora?',
                     style: TextStyle(
-                      color: Colors.black45,
+                      color: skipTextColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
