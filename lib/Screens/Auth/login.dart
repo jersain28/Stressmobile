@@ -43,6 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _signInWithGoogle() async {
     try {
+      // Forzar selector de cuentas
+      await GoogleSignIn().signOut();
+
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return;
 
@@ -52,16 +55,24 @@ class _LoginScreenState extends State<LoginScreen> {
         idToken: googleAuth.idToken,
       );
 
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      // Verifica si el usuario ya existe en Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: googleUser.email)
+          .limit(1)
+          .get();
 
-      // Guardar en Firestore si es nuevo usuario
-      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-          'email': userCredential.user!.email,
-          'createdAt': FieldValue.serverTimestamp(),
-          'provider': 'google',
-        });
+      if (userDoc.docs.isEmpty) {
+        // Usuario no existe, mostrar mensaje
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Primero debes crear tu cuenta con Google.')),
+        );
+        await GoogleSignIn().signOut(); // Opcional: cerrar sesión de Google
+        return;
       }
+
+      // Si existe, permite el login
+      await FirebaseAuth.instance.signInWithCredential(credential);
 
       Navigator.pushReplacement(
         context,

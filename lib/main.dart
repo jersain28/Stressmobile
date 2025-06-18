@@ -1,12 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:stress/Screens/Auth/welcome.dart';
-
-import 'firebase_options.dart';
+import 'package:stress/home/stress_monitor.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -18,10 +18,21 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Stress',
       debugShowCheckedModeBanner: false,
-       theme: ThemeData.light(), // Tema claro
+      theme: ThemeData.light(), // Tema claro
       darkTheme: ThemeData.dark(), // Tema oscuro
       themeMode: ThemeMode.system, // Usa el tema del sistema
-      home: const WelcomeScreen(),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasData) {
+            return const StressMonitorScreen();
+          }
+          return const WelcomeScreen();
+        },
+      ),
     );
   }
 }

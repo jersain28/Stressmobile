@@ -1,4 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:stress/Screens/Auth/welcome.dart';
+
 
 class AccountInfoScreen extends StatefulWidget {
   final int selectedIndex;
@@ -120,8 +125,23 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                     'Eliminar mi cuenta',
                     style: TextStyle(color: colorScheme.error),
                   ),
-                  onTap: () {
-                    // Acción para eliminar cuenta
+                  onTap: () async {
+                    final user = FirebaseAuth.instance.currentUser;
+                    final uid = user?.uid;
+                    if (uid != null) {
+                      // Elimina datos de Firestore
+                      await FirebaseFirestore.instance.collection('users').doc(uid).delete();
+                      // Elimina usuario de Auth
+                      await user!.delete();
+                      // Cierra sesión de Google si aplica
+                      await GoogleSignIn().signOut();
+                      // Redirige al Welcome
+                      if (!mounted) return;
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                        (route) => false,
+                      );
+                    }
                   },
                   dense: true,
                 ),
@@ -156,6 +176,34 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                   dense: true,
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Cerrar sesión
+          Container(
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: ListTile(
+              title: Text(
+                'Cerrar sesión',
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              leading: Icon(Icons.logout, color: colorScheme.primary),
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                await GoogleSignIn().signOut();
+                if (!mounted) return;
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                  (route) => false,
+                );
+              },
+              dense: true,
             ),
           ),
         ],
