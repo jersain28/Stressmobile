@@ -4,6 +4,8 @@ import 'package:stress/home/stress_monitor.dart';
 import 'package:stress/settings/account_info.dart';
 import 'package:stress/settings/settings.dart';
 
+import 'tip_detail_screen.dart'; // Importa la pantalla de detalle
+
 class TipsResourcesScreen extends StatefulWidget {
   final int selectedIndex;
   const TipsResourcesScreen({super.key, this.selectedIndex = 2});
@@ -65,7 +67,6 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
     }
   }
 
-  // ...existing code...
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -81,32 +82,42 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
       {
         'icon': Icons.air,
         'title': 'Ejercicios de Respiración',
-        'desc':
-            'Aprende técnicas de respiración profunda para reducir el estrés y la ansiedad. Estas prácticas simples pueden ayudarte a encontrar calma en momentos difíciles.',
+        'desc': 'Aprende técnicas de respiración profunda para reducir el estrés y la ansiedad.',
+        'details': '1. Siéntate en un lugar cómodo.\n'
+            '2. Inhala profundamente por la nariz contando hasta 4.\n'
+            '3. Mantén el aire en tus pulmones contando hasta 4.\n'
+            '4. Exhala lentamente por la boca contando hasta 4.\n'
+            '5. Repite este ciclo 5 veces.\n\n'
+            'Este ejercicio ayuda a calmar el sistema nervioso y reducir la ansiedad rápidamente.',
       },
       {
         'icon': Icons.self_improvement,
         'title': 'Meditación Guiada',
-        'desc':
-            'Descubre el poder de la meditación con nuestras sesiones guiadas. Perfectas para principiantes y practicantes experimentados que buscan momentos de paz.',
+        'desc': 'Descubre el poder de la meditación con nuestras sesiones guiadas.',
+        'details': 'Busca un audio de meditación guiada o usa una app.\n'
+            'Encuentra un lugar tranquilo, cierra los ojos y sigue las instrucciones del audio.\n'
+            'La meditación diaria puede mejorar tu concentración y bienestar emocional.',
       },
       {
         'icon': Icons.fitness_center,
         'title': 'Técnicas de Relajación Muscular',
-        'desc':
-            'Explora métodos efectivos para relajar tu cuerpo y mente. Aprende a liberar la tensión física y mental con ejercicios progresivos.',
+        'desc': 'Explora métodos efectivos para relajar tu cuerpo y mente.',
+        'details': 'Tensa y relaja cada grupo muscular de tu cuerpo, comenzando por los pies y subiendo hasta la cabeza.\n'
+            'Este método ayuda a liberar la tensión física acumulada por el estrés.',
       },
       {
         'icon': Icons.spa,
         'title': 'Mindfulness Diario',
-        'desc':
-            'Incorpora la atención plena en tu rutina diaria. Consejos prácticos para vivir el presente y reducir la ansiedad sobre el futuro.',
+        'desc': 'Incorpora la atención plena en tu rutina diaria.',
+        'details': 'Presta atención a tu respiración, a los sonidos y sensaciones a tu alrededor.\n'
+            'Haz una pausa consciente varias veces al día para observar tus pensamientos sin juzgarlos.',
       },
       {
         'icon': Icons.health_and_safety,
         'title': 'Rutinas de Autocuidado',
-        'desc':
-            'Descubre hábitos saludables y prácticas de autocuidado que puedes implementar en tu vida diaria para mejorar tu bienestar general.',
+        'desc': 'Descubre hábitos saludables y prácticas de autocuidado.',
+        'details': 'Dedica tiempo a actividades que disfrutes, como leer, caminar o escuchar música.\n'
+            'El autocuidado regular mejora tu estado de ánimo y tu salud general.',
       },
     ];
 
@@ -132,53 +143,68 @@ class TipsResourcesScreenState extends State<TipsResourcesScreen> {
           separatorBuilder: (_, __) => const SizedBox(height: 14),
           itemBuilder: (context, index) {
             final tip = tips[index];
-            return Container(
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  if (!isDark)
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 2,
-                      offset: Offset(0, 1),
-                    ),
-                ],
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    tip['icon'] as IconData,
-                    color: iconColor,
-                    size: 32,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          tip['title'] as String,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: titleColor,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          tip['desc'] as String,
-                          style: TextStyle(
-                            color: descColor,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TipDetailScreen(
+                      icon: tip['icon'] as IconData,
+                      title: tip['title'] as String,
+                      desc: tip['desc'] as String,
+                      details: tip['details'] as String, // Pasa el detalle
                     ),
                   ),
-                ],
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      tip['icon'] as IconData,
+                      color: iconColor,
+                      size: 32,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            tip['title'] as String,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: titleColor,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            tip['desc'] as String,
+                            style: TextStyle(
+                              color: descColor,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
