@@ -25,6 +25,15 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final firestoreName = doc.data()?['displayName'];
+        if (firestoreName != null && firestoreName != user.displayName) {
+          await user.updateDisplayName(firestoreName);
+          await user.reload();
+        }
+      }
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

@@ -14,9 +14,38 @@ class AccountInfoScreen extends StatefulWidget {
 }
 
 class _AccountInfoScreenState extends State<AccountInfoScreen> {
-  
+  Future<void> _editDisplayName(BuildContext context, User user) async {
+    final controller = TextEditingController(text: user.displayName ?? '');
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar nombre'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Nombre'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (result != null && result.isNotEmpty) {
+      await user.updateDisplayName(result);
+      await user.reload();
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
@@ -63,7 +92,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
               children: [
                 ListTile(
                   title: Text('Correo electrónico', style: TextStyle(color: textColor)),
-                  subtitle: Text('usuario@email.com', style: TextStyle(color: sectionTitleColor)),
+                  subtitle: Text(user?.email ?? 'No disponible', style: TextStyle(color: sectionTitleColor)),
                   dense: true,
                 ),
                 const Divider(height: 1),
@@ -78,11 +107,9 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                 const Divider(height: 1),
                 ListTile(
                   title: Text('Nombre (opcional)', style: TextStyle(color: textColor)),
-                  subtitle: Text('Usuario', style: TextStyle(color: sectionTitleColor)),
+                  subtitle: Text(user?.displayName ?? 'Sin nombre', style: TextStyle(color: sectionTitleColor)),
                   trailing: Icon(Icons.edit, size: 20, color: sectionTitleColor),
-                  onTap: () {
-                    // Acción para editar nombre
-                  },
+                  onTap: user == null ? null : () => _editDisplayName(context, user),
                   dense: true,
                 ),
               ],

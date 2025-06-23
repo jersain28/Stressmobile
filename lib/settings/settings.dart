@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stress/home/stress_history.dart';
 import 'package:stress/home/stress_monitor.dart';
 import 'package:stress/resources/tips_resources.dart';
 import 'package:stress/settings/account_info.dart';
+
+import '../main.dart'; // Importa para usar darkModeNotifier
 
 class SettingsScreen extends StatefulWidget {
   final int selectedIndex;
@@ -14,56 +17,41 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
-  int _selectedColor = 0; // 0: azul, 1: rojo, 2: verde
   late int _selectedIndex;
+  bool _isDarkMode = false;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.selectedIndex;
+    _isDarkMode = darkModeNotifier.value;
+  }
+
+  Future<void> _onDarkModeChanged(bool value) async {
+    setState(() {
+      _isDarkMode = value;
+      darkModeNotifier.value = value; // Esto actualiza el ValueNotifier global
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', value); // Esto guarda la preferencia
   }
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
     if (index == 0) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const StressMonitorScreen(selectedIndex: 0),
-        ),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const StressMonitorScreen(selectedIndex: 0)));
     }
     if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const StressHistoryScreen(selectedIndex: 1),
-        ),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const StressHistoryScreen(selectedIndex: 1)));
     }
     if (index == 2) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const TipsResourcesScreen(selectedIndex: 2),
-        ),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const TipsResourcesScreen(selectedIndex: 2)));
     }
     if (index == 3) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SettingsScreen(selectedIndex: 3),
-        ),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen(selectedIndex: 3)));
     }
     if (index == 4) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const AccountInfoScreen(selectedIndex: 4),
-        ),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const AccountInfoScreen(selectedIndex: 4)));
     }
   }
 
@@ -76,7 +64,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color sectionTitleColor = theme.textTheme.bodySmall?.color?.withOpacity(0.7) ?? (isDark ? Colors.white70 : Colors.black54);
     Color iconColor = theme.iconTheme.color ?? (isDark ? Colors.white70 : Colors.black54);
     Color backgroundColor = theme.scaffoldBackgroundColor;
-    Color borderColor = theme.dividerColor;
     Color selectedBorderColor = theme.colorScheme.primary;
 
     return Scaffold(
@@ -178,19 +165,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: cardColor,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: ListTile(
-              leading: Icon(Icons.color_lens, color: iconColor),
-              title: Text('Colores del tema', style: theme.textTheme.bodyMedium),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _colorCircle(0, Colors.blue, selectedBorderColor),
-                  const SizedBox(width: 8),
-                  _colorCircle(1, Colors.red, selectedBorderColor),
-                  const SizedBox(width: 8),
-                  _colorCircle(2, Colors.green, selectedBorderColor),
-                ],
-              ),
+            child: SwitchListTile(
+              secondary: Icon(Icons.dark_mode, color: iconColor),
+              title: Text('Modo oscuro', style: theme.textTheme.bodyMedium),
+              value: _isDarkMode,
+              onChanged: _onDarkModeChanged,
             ),
           ),
           const SizedBox(height: 24),
@@ -230,49 +209,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.monitor_heart),
-            label: 'Monitor',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart),
-            label: 'Historial',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.lightbulb),
-            label: 'Consejos',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.monitor_heart), label: 'Monitor'),
+          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Historial'),
+          BottomNavigationBarItem(icon: Icon(Icons.lightbulb), label: 'Consejos'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Ajustes'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Cuenta',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Cuenta'),
         ],
         backgroundColor: backgroundColor,
-      ),
-    );
-  }
-
-  Widget _colorCircle(int index, Color color, Color selectedBorderColor) {
-    final theme = Theme.of(context);
-    final isSelected = _selectedColor == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedColor = index;
-        });
-      },
-      child: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isSelected ? selectedBorderColor : Colors.transparent,
-            width: 2,
-          ),
-        ),
       ),
     );
   }
