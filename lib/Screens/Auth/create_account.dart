@@ -53,7 +53,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   Future<void> _signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn.standard().signIn();
       if (googleUser == null) return; // Cancelado por el usuario
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:stress/home/stress_monitor.dart';
@@ -57,6 +58,54 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
     }
   }
 
+  // --- Agrupa y filtra según el tab ---
+  List<QueryDocumentSnapshot> _filtrarMediciones(List<QueryDocumentSnapshot> docs) {
+    final now = DateTime.now();
+    if (_tabIndex == 0) {
+      // Día
+      final inicioDia = DateTime(now.year, now.month, now.day);
+      return docs.where((doc) {
+        final fecha = (doc['fecha'] as Timestamp).toDate();
+        return fecha.isAfter(inicioDia);
+      }).toList();
+    } else if (_tabIndex == 1) {
+      // Semana
+      final inicioSemana = now.subtract(Duration(days: now.weekday - 1));
+      return docs.where((doc) {
+        final fecha = (doc['fecha'] as Timestamp).toDate();
+        return fecha.isAfter(DateTime(inicioSemana.year, inicioSemana.month, inicioSemana.day));
+      }).toList();
+    } else {
+      // Mes
+      final inicioMes = DateTime(now.year, now.month, 1);
+      return docs.where((doc) {
+        final fecha = (doc['fecha'] as Timestamp).toDate();
+        return fecha.isAfter(inicioMes);
+      }).toList();
+    }
+  }
+
+  // --- Convierte a FlSpot para la gráfica ---
+  List<FlSpot> _buildSpots(List<QueryDocumentSnapshot> docs) {
+    if (docs.isEmpty) return [];
+    docs.sort((a, b) => (a['fecha'] as Timestamp).compareTo(b['fecha'] as Timestamp));
+    return docs.asMap().entries.map((entry) {
+      final i = entry.key;
+      final valor = entry.value['valor'] as int;
+      return FlSpot(i.toDouble(), valor.toDouble());
+    }).toList();
+  }
+
+  // --- Calcula promedio, máximo, mínimo ---
+  Map<String, int> _calcularStats(List<QueryDocumentSnapshot> docs) {
+    if (docs.isEmpty) return {'promedio': 0, 'max': 0, 'min': 0};
+    final valores = docs.map((e) => e['valor'] as int).toList();
+    final promedio = valores.reduce((a, b) => a + b) ~/ valores.length;
+    final max = valores.reduce((a, b) => a > b ? a : b);
+    final min = valores.reduce((a, b) => a < b ? a : b);
+    return {'promedio': promedio, 'max': max, 'min': min};
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -108,159 +157,109 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            // Gráfica
-            SizedBox(
-              height: 180,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: borderColor.withOpacity(0.2),
-                      strokeWidth: 1,
-                    ),
-                  ),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 28,
-                        getTitlesWidget: (value, meta) {
-                          final labelStyle = TextStyle(
-                            fontSize: 12,
-                            color: secondaryTextColor,
-                          );
-                          switch (value.toInt()) {
-                            case 8:
-                              return Text('8:00', style: labelStyle);
-                            case 10:
-                              return Text('10:00', style: labelStyle);
-                            case 12:
-                              return Text('12:00', style: labelStyle);
-                            case 14:
-                              return Text('14:00', style: labelStyle);
-                            case 16:
-                              return Text('16:00', style: labelStyle);
-                            case 18:
-                              return Text('18:00', style: labelStyle);
-                            case 20:
-                              return Text('20:00', style: labelStyle);
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border.all(color: borderColor.withOpacity(0.5)),
-                  ),
-                  minX: 8,
-                  maxX: 20,
-                  minY: 0,
-                  maxY: 100,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: const [
-                        FlSpot(8, 40),
-                        FlSpot(10, 70),
-                        FlSpot(12, 85), // máximo
-                        FlSpot(14, 55),
-                        FlSpot(16, 35), // mínimo
-                        FlSpot(18, 60),
-                        FlSpot(20, 50),
-                      ],
-                      isCurved: true,
-                      color: accentColor,
-                      barWidth: 3,
-                      dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, bar, index) {
-                          if (spot.x == 12) {
-                            // máximo
-                            return FlDotCirclePainter(
-                              radius: 6,
-                              color: Colors.red,
-                              strokeWidth: 2,
-                              strokeColor: cardColor,
-                            );
-                          }
-                          if (spot.x == 16) {
-                            // mínimo
-                            return FlDotCirclePainter(
-                              radius: 6,
-                              color: Colors.green,
-                              strokeWidth: 2,
-                              strokeColor: cardColor,
-                            );
-                          }
-                          return FlDotCirclePainter(
-                            radius: 4,
-                            color: accentColor,
-                            strokeWidth: 1,
-                            strokeColor: cardColor,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            // Promedio, Máximo, Mínimo
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildStatCard(context, Icons.bar_chart, '56', 'Promedio', accentColor),
-                _buildStatCard(context, Icons.trending_up, '85', 'Máximo', Colors.red),
-                _buildStatCard(context, Icons.trending_down, '35', 'Mínimo', Colors.green),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'Desglose por horas',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: textColor,
-              ),
-            ),
-            const SizedBox(height: 8),
             Expanded(
-              child: ListView(
-                children: const [
-                  _HourDetail(
-                    hour: '12:00',
-                    description: 'Nivel más alto de estrés',
-                    value: '85%',
-                  ),
-                  _HourDetail(
-                    hour: '14:00',
-                    description: 'Después del almuerzo',
-                    value: '55%',
-                  ),
-                  _HourDetail(
-                    hour: '16:00',
-                    description: 'Nivel más bajo registrado',
-                    value: '35%',
-                  ),
-                  _HourDetail(
-                    hour: '18:00',
-                    description: 'Final de la jornada',
-                    value: '60%',
-                  ),
-                ],
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('mediciones_estres')
+                    .orderBy('fecha')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final docs = _filtrarMediciones(snapshot.data!.docs);
+                  final spots = _buildSpots(docs);
+                  final stats = _calcularStats(docs);
+
+                  return Column(
+                    children: [
+                      // Gráfica
+                      SizedBox(
+                        height: 180,
+                        child: LineChart(
+                          LineChartData(
+                            minX: 0,
+                            maxX: spots.isNotEmpty ? spots.length - 1 : 1,
+                            minY: 0,
+                            maxY: 100,
+                            lineBarsData: [
+                              LineChartBarData(
+                                spots: spots,
+                                isCurved: true,
+                                color: accentColor,
+                                barWidth: 3,
+                                dotData: FlDotData(show: true),
+                              ),
+                            ],
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              rightTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              topTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                            ),
+                            borderData: FlBorderData(
+                              show: true,
+                              border: Border.all(color: borderColor.withOpacity(0.5)),
+                            ),
+                            gridData: FlGridData(show: false),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      // Promedio, Máximo, Mínimo
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildStatCard(context, Icons.bar_chart, '${stats['promedio']}', 'Promedio', accentColor),
+                          _buildStatCard(context, Icons.trending_up, '${stats['max']}', 'Máximo', Colors.red),
+                          _buildStatCard(context, Icons.trending_down, '${stats['min']}', 'Mínimo', Colors.green),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Desglose por horas',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (docs.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text('No hay mediciones registradas.', style: TextStyle(fontSize: 16)),
+                        )
+                      else
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: docs.length,
+                            itemBuilder: (context, index) {
+                              final doc = docs[index];
+                              final fecha = (doc['fecha'] as Timestamp).toDate();
+                              final valor = doc['valor'];
+                              return _HourDetail(
+                                hour: '${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}',
+                                description: 'Medición',
+                                value: '$valor%',
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
