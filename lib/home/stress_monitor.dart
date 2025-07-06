@@ -212,7 +212,7 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                dayStress.toStringAsFixed(1),
+                                dayStress.toStringAsFixed(0),
                                 style: TextStyle(
                                   color: colorScheme.onPrimary,
                                   fontWeight: FontWeight.bold,
@@ -235,7 +235,7 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                weekStress.toStringAsFixed(1),
+                                weekStress.toStringAsFixed(0),
                                 style: TextStyle(
                                   color: colorScheme.onPrimary,
                                   fontWeight: FontWeight.bold,

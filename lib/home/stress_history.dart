@@ -243,16 +243,34 @@ class StressHistoryScreenState extends State<StressHistoryScreen> {
                         )
                       else
                         Expanded(
-                          child: ListView.builder(
-                            itemCount: docs.length,
-                            itemBuilder: (context, index) {
-                              final doc = docs[index];
-                              final fecha = (doc['fecha'] as Timestamp).toDate();
-                              final valor = doc['valor'];
-                              return _HourDetail(
-                                hour: '${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}',
-                                description: 'Medición',
-                                value: '$valor%',
+                          child: Builder(
+                            builder: (context) {
+                              final ahora = DateTime.now();
+                              final hace24h = ahora.subtract(const Duration(hours: 24));
+                              final docsUltimas24h = docs.where((doc) {
+                                final fecha = (doc['fecha'] as Timestamp).toDate();
+                                return fecha.isAfter(hace24h);
+                              }).toList();
+
+                              if (docsUltimas24h.isEmpty) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Text('No hay mediciones en las últimas 24 horas.', style: TextStyle(fontSize: 16)),
+                                );
+                              }
+
+                              return ListView.builder(
+                                itemCount: docsUltimas24h.length,
+                                itemBuilder: (context, index) {
+                                  final doc = docsUltimas24h[index];
+                                  final fecha = (doc['fecha'] as Timestamp).toDate();
+                                  final valor = doc['valor'];
+                                  return _HourDetail(
+                                    hour: '${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}',
+                                    description: 'Medición',
+                                    value: '$valor%',
+                                  );
+                                },
                               );
                             },
                           ),
