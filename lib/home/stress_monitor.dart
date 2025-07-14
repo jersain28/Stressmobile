@@ -102,14 +102,6 @@ class _StressMonitorScreenState extends State<StressMonitorScreen> {
             padding: const EdgeInsets.only(right: 16, top: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(Icons.sync, color: accentColor, size: 22),
-                const SizedBox(height: 2),
-                Text(
-                  'Conectado',
-                  style: TextStyle(color: secondaryTextColor, fontSize: 12),
-                ),
-              ],
             ),
           ),
         ],

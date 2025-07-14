@@ -108,9 +108,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: Text('Smartwatch conectado:', style: theme.textTheme.bodyMedium),
               subtitle: Row(
                 children: [
-                  Icon(Icons.circle, color: Colors.green, size: 12),
+                  Icon(Icons.circle, color: const Color.fromARGB(255, 175, 84, 76), size: 12),
                   const SizedBox(width: 4),
-                  Text('Conectado', style: theme.textTheme.bodySmall?.copyWith(fontSize: 13)),
+                  Text('Desconectado', style: theme.textTheme.bodySmall?.copyWith(fontSize: 13)),
                 ],
               ),
               trailing: TextButton(
